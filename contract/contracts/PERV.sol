@@ -10,7 +10,7 @@ contract PERV {
     mapping(bytes => bytes) private _A_signed_dataurl;
     mapping(bytes => bytes) private _B_signed_dataurl;
 
-    mapping(bytes => string) private _dataurl;
+    mapping(bytes => bytes) private _dataurl;
 
     mapping(bytes32 => bytes) private _hash_convert_to_bytes;
     mapping(bytes => address) private _B_address;
@@ -35,13 +35,26 @@ contract PERV {
         _hash_convert_to_bytes[bytes32(hashed_A_nonce)] = hashed_A_nonce; // 処理の都合上
     }
 
-    function putIntent(bytes memory B_signed_dataurl, bytes memory hashed_A_nonce, string memory dataurl) public {
+    function putIntent(bytes memory B_signed_dataurl, bytes memory hashed_A_nonce, bytes memory dataurl) public {
         bytes32 expected_dataurl = keccak256(bytes(dataurl));
         address signer = _recoverSigner(expected_dataurl, B_signed_dataurl);
         bytes memory B_pubkey = _B_pubkey[hashed_A_nonce];
         address B_address = _B_address[B_pubkey];
 
         require(signer == B_address, "PERV: not match");
+
+        bytes32 expected_hash = bytes32(_hashed_data[hashed_A_nonce]);
+        bytes32 hash;
+
+        uint256 deal_range = expected_hash.length;
+        uint256 data_range = dataurl.length;
+        uint256 overflow = data_range - deal_range;
+
+        assembly {
+            hash := mload(add(dataurl, overflow))
+        }
+
+        require(hash == expected_hash, "PERV: not hash match");
 
         // データURLが一致するかどうか
 
@@ -53,9 +66,9 @@ contract PERV {
         bytes32 expected_A_nonce = keccak256(A_nonce);
         bytes memory expected_hashed_A_nonce = _hash_convert_to_bytes[expected_A_nonce];
         require(keccak256(_B_signed_dataurl[expected_hashed_A_nonce]) == keccak256(bytes("")), "PERV: not match");
-        string memory dataurl = _dataurl[expected_hashed_A_nonce];
+        bytes memory dataurl = _dataurl[expected_hashed_A_nonce];
 
-        bytes32 expected_dataurl = keccak256(bytes(dataurl));
+        bytes32 expected_dataurl = keccak256(dataurl);
         address signer = _recoverSigner(expected_dataurl, A_signed_dataurl);
         address A_address = _calculateAddressFromPubKey(A_pubkey);
 
