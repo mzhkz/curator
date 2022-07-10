@@ -33,7 +33,7 @@ describe("PERV", () => {
 			const { perv, owner } = await loadFixture(deployPERV);
 			expect(await perv.owner()).to.equal(owner.address);
 		});
-		it("Test sign", async () => {
+		it("Should equal between hash sets by local and contract", async () => {
 			const { perv, owner } = await loadFixture(deployPERV);
 			const message = "abc";
 			const contract_hash = await perv.hashdayo(
@@ -43,7 +43,7 @@ describe("PERV", () => {
 			expect(contract_hash).to.equal(local_hast);
 		});
 
-		it("Test sign v2!", async () => {
+		it("Should equal between hash sets by singner and recover address", async () => {
 			const { perv, A, signer_A } = await loadFixture(deployPERV);
 			const message = "abc";
 			const hash = await ethers.utils.id(message);
@@ -54,6 +54,21 @@ describe("PERV", () => {
 				.signdayo(messageHashBinary, signature);
 
 			expect(signer).to.equal(A.address);
+		});
+
+		it("address", async () => {
+			const { perv, B } = await loadFixture(deployPERV);
+			const address_by_contract = (
+				await perv._calculateAddressFromPubKey(B.publicKey)
+			).toLowerCase();
+			const address_by_local = ethers.utils
+				.hexDataSlice(
+					ethers.utils.keccak256(ethers.utils.hexDataSlice(B.publicKey, 1)),
+					12
+				)
+				.toLowerCase();
+			expect(address_by_contract).to.equal(address_by_local);
+			expect(address_by_local).to.equal(B.address.toLowerCase());
 		});
 	});
 
@@ -72,9 +87,6 @@ describe("PERV", () => {
 
 			const data = "12345";
 			const hex_hashed_data = ethers.utils.id(data);
-
-			console.log(signer_B.address);
-			console.log(B.address);
 
 			await perv
 				.connect(signer_B)

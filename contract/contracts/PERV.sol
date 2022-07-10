@@ -36,21 +36,16 @@ contract PERV {
         return keccak256(data);
     }
 
-    function signdayo(bytes memory hash, bytes memory sig) public pure returns(address) {
-        return bytes32(hash).toEthSignedMessageHash().recover(sig);
+    function signdayo(bytes32 hash, bytes memory sig) public pure returns(address) {
+        return  _recoverSigner(hash, sig);
     }
 
     function createQue(bytes memory hashed_A_nonce, bytes memory B_signed_hashed_A_nonce, bytes memory B_pubkey, bytes memory hashed_data) public {
-        bytes32 expected_A_nonce = bytes32(hashed_A_nonce).toEthSignedMessageHash();
-        // address signer = _recoverSigner(expected_A_nonce, B_signed_hashed_A_nonce);
-        address signer = bytes32(hashed_A_nonce).toEthSignedMessageHash().recover(B_signed_hashed_A_nonce);
+        bytes32 expected_A_nonce = bytes32(hashed_A_nonce);
+        address signer = _recoverSigner(expected_A_nonce, B_signed_hashed_A_nonce);
         address B_address = _calculateAddressFromPubKey(B_pubkey);
 
-        console.log("signer: ", signer);
-        console.log("B_address: ", B_address);
-        console.log("msg.sender: ", msg.sender);
-
-        require(signer == msg.sender, "PERV (createQue): not match the signer to the platformer");
+        require(signer == B_address, "PERV (createQue): not match the signer to the platformer");
 
         _B_pubkey[hashed_A_nonce] = B_pubkey;
         _B_address[B_pubkey] = B_address;
@@ -59,7 +54,7 @@ contract PERV {
     }
 
     function putIntent(bytes memory B_signed_dataurl, bytes memory hashed_A_nonce, bytes memory dataurl) public {
-        bytes32 expected_dataurl = keccak256(bytes(dataurl));
+        bytes32 expected_dataurl = bytes32(dataurl);
         address signer = _recoverSigner(expected_dataurl, B_signed_dataurl);
         bytes memory B_pubkey = _B_pubkey[hashed_A_nonce];
         address B_address = _B_address[B_pubkey];
@@ -89,7 +84,7 @@ contract PERV {
         require(keccak256(_B_signed_dataurl[expected_hashed_A_nonce]) == keccak256(bytes("")), "PERV: not match");
         bytes memory dataurl = _dataurl[expected_hashed_A_nonce];
 
-        bytes32 expected_dataurl = keccak256(dataurl);
+        bytes32 expected_dataurl = bytes32(dataurl);
         address signer = _recoverSigner(expected_dataurl, A_signed_dataurl);
         address A_address = _calculateAddressFromPubKey(A_pubkey);
 
@@ -134,8 +129,59 @@ contract PERV {
        return (v, r, s);
     }
     
-    function _calculateAddressFromPubKey(bytes memory pub) internal pure returns (address addr) {
-       bytes32 hash = keccak256(pub);
-       addr = address(uint160(bytes20(hash)));
+
+     function _calculateAddressFromPubKey(bytes memory key) public pure returns (address addr) {
+        bytes memory data = slice(key, 1, key.length-1);
+        bytes32 keyHash = keccak256(data);
+        data = abi.encodePacked(keyHash);
+        data = slice(data, 12, data.length-12);
+        assembly {
+            addr := mload(add(data,20))
+        } 
+    }
+
+    function slice(
+        bytes memory _bytes,
+        uint256 _start,
+        uint256 _length
+    )
+        internal
+        pure
+        returns (bytes memory)
+    {
+        require(_length + 31 >= _length, "slice_overflow");
+        require(_bytes.length >= _start + _length, "slice_outOfBounds");
+
+        bytes memory tempBytes;
+
+        assembly {
+            switch iszero(_length)
+            case 0 {
+                tempBytes := mload(0x40)
+                let lengthmod := and(_length, 31)
+
+                let mc := add(add(tempBytes, lengthmod), mul(0x20, iszero(lengthmod)))
+                let end := add(mc, _length)
+
+                for {
+                    let cc := add(add(add(_bytes, lengthmod), mul(0x20, iszero(lengthmod))), _start)
+                } lt(mc, end) {
+                    mc := add(mc, 0x20)
+                    cc := add(cc, 0x20)
+                } {
+                    mstore(mc, mload(cc))
+                }
+
+                mstore(tempBytes, _length)
+                mstore(0x40, and(add(mc, 31), not(31)))
+            }
+            default {
+                tempBytes := mload(0x40)
+                mstore(tempBytes, 0)
+                mstore(0x40, add(tempBytes, 0x20))
+            }
+        }
+
+        return tempBytes;
     }
 }
