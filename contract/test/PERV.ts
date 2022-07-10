@@ -106,7 +106,7 @@ describe("PERV", () => {
 
 			await perv
 				.connect(signer_B)
-				.putIntent(hex_B_signed_dataurl, hex_hashed_nonce, hex_dataurl);
+				.putIntent(hex_B_signed_dataurl, hex_hashed_nonce, binary_dataurl);
 
 			const hex_A_signed_dataurl = A.signMessage(binary_dataurl);
 			await perv

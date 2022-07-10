@@ -65,13 +65,11 @@ contract PERV {
         require(signer == B_address, "PERV (putIntent): not match the signer to platformer");
 
         bytes32 expected_hash = bytes32(_hashed_data[hashed_A_nonce]);
-        bytes32 hash;
-
         uint256 hash_range = expected_hash.length;
         uint256 dataurl_range = dataurl.length;
         uint256 start = dataurl_range - hash_range;
 
-        bytes32 hash = slice(dataurl, start, hash_range);
+        bytes32 hash = bytes32(slice(dataurl, start, hash_range));
 
         require(hash == expected_hash, "PERV (putIntent): not match the data hash");
 
