@@ -56,7 +56,7 @@ describe("PERV", () => {
 			expect(signer).to.equal(A.address);
 		});
 
-		it("address", async () => {
+		it("Should equal between computed addresses by local and contract", async () => {
 			const { perv, B } = await loadFixture(deployPERV);
 			const address_by_contract = (
 				await perv._calculateAddressFromPubKey(B.publicKey)
@@ -96,6 +96,22 @@ describe("PERV", () => {
 					B.publicKey,
 					hex_hashed_data
 				);
+
+			const dataurl = "https://localhost:1209/" + hex_hashed_data.toString();
+			const hex_dataurl = ethers.utils.hexlify(
+				ethers.utils.toUtf8Bytes(dataurl)
+			);
+			const binary_dataurl = ethers.utils.arrayify(hex_dataurl);
+			const hex_B_signed_dataurl = B.signMessage(binary_dataurl);
+
+			await perv
+				.connect(signer_B)
+				.putIntent(hex_B_signed_dataurl, hex_hashed_nonce, hex_dataurl);
+
+			const hex_A_signed_dataurl = A.signMessage(binary_dataurl);
+			await perv
+				.connect(signer_A)
+				.putFinaility(hex_A_signed_dataurl, A.publicKey, hex_nonce);
 		});
 		// it("Should generate nonce and sign it", async () => {
 		// 	const { perv, A, B, signer_A, signer_B } = await loadFixture(deployPERV);
@@ -115,14 +131,14 @@ describe("PERV", () => {
 		// 	console.log(signer_A.address);
 		// 	console.log(A.address);
 
-		// 	await perv
-		// 		.connect(signer_A)
-		// 		.createQue(
-		// 			binary_hashed_nonce,
-		// 			hex_B_signed_hashed_nonce,
-		// 			B.publicKey,
-		// 			hex_hashed_data
-		// 		);
+		// await perv
+		// 	.connect(signer_A)
+		// 	.createQue(
+		// 		binary_hashed_nonce,
+		// 		hex_B_signed_hashed_nonce,
+		// 		B.publicKey,
+		// 		hex_hashed_data
+		// 	);
 
 		// 	const dataurl = "https://localhost:1209/" + hex_hashed_data.toString();
 		// 	const hex_dataurl = ethers.utils.hexlify(dataurl);

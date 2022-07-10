@@ -58,19 +58,20 @@ contract PERV {
         address signer = _recoverSigner(expected_dataurl, B_signed_dataurl);
         bytes memory B_pubkey = _B_pubkey[hashed_A_nonce];
         address B_address = _B_address[B_pubkey];
+        
+        console.log(signer);
+        console.log(B_address);
 
         require(signer == B_address, "PERV (putIntent): not match the signer to platformer");
 
         bytes32 expected_hash = bytes32(_hashed_data[hashed_A_nonce]);
         bytes32 hash;
 
-        uint256 deal_range = expected_hash.length;
-        uint256 data_range = dataurl.length;
-        uint256 overflow = data_range - deal_range;
+        uint256 hash_range = expected_hash.length;
+        uint256 dataurl_range = dataurl.length;
+        uint256 start = dataurl_range - hash_range;
 
-        assembly {
-            hash := mload(add(dataurl, overflow))
-        }
+        bytes32 hash = slice(dataurl, start, hash_range);
 
         require(hash == expected_hash, "PERV (putIntent): not match the data hash");
 
@@ -92,6 +93,16 @@ contract PERV {
 
         _A_pubkey[expected_hashed_A_nonce] = A_pubkey;
         _A_signed_dataurl[expected_hashed_A_nonce] = A_signed_dataurl;
+    }
+
+    function _calculateAddressFromPubKey(bytes memory key) public pure returns (address addr) {
+        bytes memory data = slice(key, 1, key.length-1);
+        bytes32 keyHash = keccak256(data);
+        data = abi.encodePacked(keyHash);
+        data = slice(data, 12, data.length-12);
+        assembly {
+            addr := mload(add(data,20))
+        } 
     }
 
     function _recoverSigner(bytes32 hash, bytes memory sig)
@@ -127,17 +138,6 @@ contract PERV {
            v := byte(0, mload(add(sig, 96)))
        }
        return (v, r, s);
-    }
-    
-
-     function _calculateAddressFromPubKey(bytes memory key) public pure returns (address addr) {
-        bytes memory data = slice(key, 1, key.length-1);
-        bytes32 keyHash = keccak256(data);
-        data = abi.encodePacked(keyHash);
-        data = slice(data, 12, data.length-12);
-        assembly {
-            addr := mload(add(data,20))
-        } 
     }
 
     function slice(
