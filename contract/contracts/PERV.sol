@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
+// Import this file to use console.log
+import "hardhat/console.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
 contract PERV {
+    using ECDSA for bytes32;
+
     mapping(bytes => bytes) private _A_pubkey;
     mapping(bytes => bytes) private _B_pubkey;
 
@@ -22,12 +28,29 @@ contract PERV {
         _owner = msg.sender;
     }
 
+    function owner() public view returns(address) {
+        return _owner;
+    }
+
+    function hashdayo(bytes memory data) public pure returns(bytes32) {
+        return keccak256(data);
+    }
+
+    function signdayo(bytes memory hash, bytes memory sig) public pure returns(address) {
+        return bytes32(hash).toEthSignedMessageHash().recover(sig);
+    }
+
     function createQue(bytes memory hashed_A_nonce, bytes memory B_signed_hashed_A_nonce, bytes memory B_pubkey, bytes memory hashed_data) public {
-        bytes32 expected_A_nonce = keccak256(hashed_A_nonce);
-        address signer = _recoverSigner(expected_A_nonce, B_signed_hashed_A_nonce);
+        bytes32 expected_A_nonce = bytes32(hashed_A_nonce).toEthSignedMessageHash();
+        // address signer = _recoverSigner(expected_A_nonce, B_signed_hashed_A_nonce);
+        address signer = bytes32(hashed_A_nonce).toEthSignedMessageHash().recover(B_signed_hashed_A_nonce);
         address B_address = _calculateAddressFromPubKey(B_pubkey);
 
-        require(signer == B_address, "PERV: not match");
+        console.log("signer: ", signer);
+        console.log("B_address: ", B_address);
+        console.log("msg.sender: ", msg.sender);
+
+        require(signer == msg.sender, "PERV (createQue): not match the signer to the platformer");
 
         _B_pubkey[hashed_A_nonce] = B_pubkey;
         _B_address[B_pubkey] = B_address;
@@ -41,7 +64,7 @@ contract PERV {
         bytes memory B_pubkey = _B_pubkey[hashed_A_nonce];
         address B_address = _B_address[B_pubkey];
 
-        require(signer == B_address, "PERV: not match");
+        require(signer == B_address, "PERV (putIntent): not match the signer to platformer");
 
         bytes32 expected_hash = bytes32(_hashed_data[hashed_A_nonce]);
         bytes32 hash;
@@ -54,9 +77,7 @@ contract PERV {
             hash := mload(add(dataurl, overflow))
         }
 
-        require(hash == expected_hash, "PERV: not hash match");
-
-        // データURLが一致するかどうか
+        require(hash == expected_hash, "PERV (putIntent): not match the data hash");
 
         _B_signed_dataurl[hashed_A_nonce] = B_signed_dataurl;
         _dataurl[hashed_A_nonce] = dataurl;
@@ -72,13 +93,13 @@ contract PERV {
         address signer = _recoverSigner(expected_dataurl, A_signed_dataurl);
         address A_address = _calculateAddressFromPubKey(A_pubkey);
 
-        require(signer == A_address, "PERV: not match");
+        require(signer == A_address, "PERV (putFinaility): not match the signer to provider");
 
         _A_pubkey[expected_hashed_A_nonce] = A_pubkey;
         _A_signed_dataurl[expected_hashed_A_nonce] = A_signed_dataurl;
     }
 
-    function _recoverSigner(bytes32 message, bytes memory sig)
+    function _recoverSigner(bytes32 hash, bytes memory sig)
        internal
        pure
        returns (address)
@@ -87,7 +108,9 @@ contract PERV {
        bytes32 r;
        bytes32 s;
        (v, r, s) = _splitSignature(sig);
-       return ecrecover(message, v, r, s);
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 prefixedHashMessage = keccak256(abi.encodePacked(prefix, hash));
+       return ecrecover(prefixedHashMessage, v, r, s);
     }
     
     function _splitSignature(bytes memory sig)
@@ -113,9 +136,6 @@ contract PERV {
     
     function _calculateAddressFromPubKey(bytes memory pub) internal pure returns (address addr) {
        bytes32 hash = keccak256(pub);
-       assembly {
-           mstore(0, hash)
-           addr := mload(0)
-        }
+       addr = address(uint160(bytes20(hash)));
     }
 }
