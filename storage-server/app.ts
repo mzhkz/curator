@@ -1,18 +1,28 @@
 import express from "express";
 import ethers from "ethers";
+import multer from "multer";
 import fs from "fs";
+import os from "os";
+
+import PERVArtifact from "./dest/PERV.json";
+import PERVAddress from "./dest/PERV-address.json";
 
 const app: express.Express = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-const wallet: ethers.Wallet = new ethers.Wallet(
-	"0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
-);
+const upload = multer({ dest: os.tmpdir() });
 
 const url = "http://localhost:8465";
 const provider = new ethers.providers.JsonRpcProvider(url);
-const contract = new ethers.Contract("", "", wallet);
+const _wallet: ethers.Wallet = new ethers.Wallet(
+	"0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
+);
+const wallet = _wallet.connect(provider);
+const contract = new ethers.Contract(
+	PERVAddress.address as string,
+	PERVArtifact.abi as any,
+	wallet
+);
 
 // 辞書オブジェクトを作成する
 const nonces: { [hashed_b_nonce: string]: string } = {};
@@ -57,6 +67,7 @@ app.post(
 
 app.post(
 	"/upload_file",
+	upload.single("file"),
 	async (
 		req: express.Request<UploadFile>,
 		res: express.Response,
@@ -66,23 +77,9 @@ app.post(
 		if (nonces[hex_hashed_b_nonce] === undefined) {
 			res.status(401).json("not correct hex_hashed_b_nonce value.");
 		}
-		let buffer: Buffer | null = null;
-		let hex_hashed_data: string | null = null;
-		req.on("data", (chunk) => {
-			if (buffer == null) {
-				buffer = Buffer.from(chunk);
-			} else {
-				buffer = Buffer.concat([buffer, chunk]);
-			}
-		});
-		req.on("end", () => {
-			hex_hashed_data = ethers.utils.keccak256(buffer);
-			fs.writeFile("sample.png", buffer as Buffer, (err) => {
-				console.log(err);
-			});
-			next();
-		});
-
+		const file_path = req.file.path;
+		const buffer = await fs.readFileSync(file_path);
+		const hex_hashed_data = ethers.utils.keccak256(buffer);
 		const dataurl = "http://localhost:3000/" + hex_hashed_data;
 		const hex_dataurl = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(dataurl));
 		const hex_hashed_dataurl = ethers.utils.keccak256(hex_dataurl);

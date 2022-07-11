@@ -8,19 +8,20 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 contract PERV {
     using ECDSA for bytes32;
 
-    mapping(bytes => bytes) private _A_pubkey;
-    mapping(bytes => bytes) private _B_pubkey;
+    mapping(bytes => bytes) private _A_pubkey; // hashed_A_nonce -> A_pubkey
+    mapping(bytes => bytes) private _B_pubkey; // hashed_A_nonce -> B_pubkey
 
-    mapping(bytes => bytes) private _hashed_data;
+    mapping(bytes => bytes) private _hashed_data; // hashed_A_nonce -> hashed_data
 
-    mapping(bytes => bytes) private _A_signed_dataurl;
-    mapping(bytes => bytes) private _B_signed_dataurl;
+    mapping(bytes => bytes) private _A_signed_dataurl; // hashed_A_nonce -> A_signed
+    mapping(bytes => bytes) private _B_signed_dataurl; // hashed_A_nonce -> B_signed
 
-    mapping(bytes => bytes) private _dataurl;
-    mapping(bytes => bytes) private _hashed_dataurl;
+    mapping(bytes => bytes) private _dataurl; // hashed_A_nonce -> dataurl
+    mapping(bytes => bytes) private _hashed_dataurl;  // hashed_A_nonce -> hashed_dataurl 仕様にはいらないが、署名の検証にはハッシュ値が必要なので特別に定義
 
-    mapping(bytes32 => bytes) private _hash_convert_to_bytes;
-    mapping(bytes => address) private _B_address;
+    mapping(bytes => address) private _B_address; // hashed_A_nonce -> B_address  アドレスの再計算を避けるため
+
+    mapping(bytes => bytes) private _hashed_A_nonce_from_dataurl; // hashed_A_nonce
 
 
     address private _owner;
@@ -51,7 +52,6 @@ contract PERV {
         _B_pubkey[hashed_A_nonce] = B_pubkey;
         _B_address[B_pubkey] = B_address;
         _hashed_data[hashed_A_nonce] = hashed_data;
-        _hash_convert_to_bytes[bytes32(hashed_A_nonce)] = hashed_A_nonce; // 処理の都合上
     }
 
     function putIntent(bytes memory dataurl, bytes memory hashed_dataurl, bytes memory B_signed_dataurl, bytes memory hashed_A_nonce) public {
@@ -80,11 +80,12 @@ contract PERV {
         _B_signed_dataurl[hashed_A_nonce] = B_signed_dataurl;
         _dataurl[hashed_A_nonce] = dataurl;
         _hashed_dataurl[hashed_A_nonce] = hashed_dataurl;
+        _hashed_A_nonce_from_dataurl[hashed_dataurl] = hashed_A_nonce; // クライアントCによる検証のために、dataurlからナンスを参照できるようにする。
     }
 
     function putFinaility(bytes memory A_signed_dataurl, bytes memory A_pubkey, bytes memory A_nonce) public {
         bytes32 expected_A_nonce = keccak256(A_nonce);
-        bytes memory expected_hashed_A_nonce = _hash_convert_to_bytes[expected_A_nonce];
+        bytes memory expected_hashed_A_nonce = abi.encodePacked(expected_A_nonce);
         require(keccak256(_B_signed_dataurl[expected_hashed_A_nonce]) != keccak256(bytes("0x")), "PERV: not match");
 
         bytes memory hashed_dataurl = _hashed_dataurl[expected_hashed_A_nonce];

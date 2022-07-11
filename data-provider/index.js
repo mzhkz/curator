@@ -9,7 +9,11 @@ const _wallet = new ethers.Wallet(
 	"0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
 );
 const wallet = _wallet.connect(provider);
-const contract = new ethers.Contract("", "", wallet);
+const contract = new ethers.Contract(
+	PERVAddress.address,
+	PERVArtifact.abi,
+	wallet
+);
 
 program
   .version("1.0.0", "-v, --version") // version の設定
@@ -21,18 +25,18 @@ program
   .command("req [address] [nonce]") // command を使用する場合
   .description("to request to update data to the server, and get a sig B nonce.")
     .action(async (address, nonce) => {
-        const hex_a_nonce = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(nonce));
-		const hex_hashed_a_nonce = ethers.utils.keccak256(hex_a_nonce);
+      const hex_a_nonce = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(nonce));
+      const hex_hashed_a_nonce = ethers.utils.keccak256(hex_a_nonce);
 
-        const response = axios.post(`${address}/req_nonce`, body={hex_hashed_a_nonce});
-        const { hex_b_sig_hash_a_nonce, hex_b_public_key, hex_hashed_b_nonce } = response.data
-        console.log(`nonce: ${nonce}`);
-        console.log(`hex_hashed_a_nonce: ${hex_hashed_a_nonce}`)
-        console.log(`hex_b_sig_hash_a_nonce: ${hex_b_sig_hash_a_nonce}`)
-        console.log(`hex_b_public_key: ${hex_b_public_key}`)
-        console.log(`hex_hashed_b_nonce: ${hex_hashed_b_nonce}`)
-        console.log("")
-        console.log("Done!")
+      const response = axios.post(`${address}/req_nonce`, body={hex_hashed_a_nonce});
+      const { hex_b_sig_hash_a_nonce, hex_b_public_key, hex_hashed_b_nonce } = response.data
+      console.log(`nonce: ${nonce}`);
+      console.log(`hex_hashed_a_nonce: ${hex_hashed_a_nonce}`)
+      console.log(`hex_b_sig_hash_a_nonce: ${hex_b_sig_hash_a_nonce}`)
+      console.log(`hex_b_public_key: ${hex_b_public_key}`)
+      console.log(`hex_hashed_b_nonce: ${hex_hashed_b_nonce}`)
+      console.log("")
+      console.log("Done!")
     });
 
 program
