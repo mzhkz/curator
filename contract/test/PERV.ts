@@ -128,46 +128,5 @@ describe("PERV", () => {
 				.connect(signer_A)
 				.putFinaility(hex_A_signed_dataurl, A.publicKey, binary_nonce);
 		});
-		// it("Should generate nonce and sign it", async () => {
-		// 	const { perv, A, B, signer_A, signer_B } = await loadFixture(deployPERV);
-
-		// 	const nonce = "abcede";
-		// 	const hex_nonce = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(nonce));
-		// 	const hex_hashed_nonce = ethers.utils.keccak256(hex_nonce);
-		// 	const binary_hashed_nonce = ethers.utils.arrayify(hex_hashed_nonce);
-
-		// 	const hex_B_signed_hashed_nonce = await B.signMessage(
-		// 		binary_hashed_nonce
-		// 	);
-
-		// 	const data = "12345";
-		// 	const hex_hashed_data = ethers.utils.id(data);
-
-		// 	console.log(signer_A.address);
-		// 	console.log(A.address);
-
-		// await perv
-		// 	.connect(signer_A)
-		// 	.createQue(
-		// 		binary_hashed_nonce,
-		// 		hex_B_signed_hashed_nonce,
-		// 		B.publicKey,
-		// 		hex_hashed_data
-		// 	);
-
-		// 	const dataurl = "https://localhost:1209/" + hex_hashed_data.toString();
-		// 	const hex_dataurl = ethers.utils.hexlify(dataurl);
-		// 	const binary_dataurl = ethers.utils.arrayify(hex_dataurl);
-		// 	const hex_B_signed_dataurl = B.signMessage(binary_dataurl);
-
-		// 	await perv
-		// 		.connect(signer_B)
-		// 		.putIntent(hex_B_signed_dataurl, hex_hashed_nonce, hex_dataurl);
-
-		// 	const hex_A_signed_dataurl = A.signMessage(binary_dataurl);
-		// 	await perv
-		// 		.connect(signer_A)
-		// 		.putFinaility(hex_A_signed_dataurl, A.publicKey, hex_nonce);
-		// });
 	});
 });
