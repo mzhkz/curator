@@ -127,6 +127,10 @@ describe("PERV", () => {
 			await perv
 				.connect(signer_A)
 				.putFinaility(hex_A_signed_dataurl, A.publicKey, binary_nonce);
+
+			const { A_sig, B_sig } = await perv.getSignatures(binary_dataurl);
+			console.log(A_sig);
+			console.log(B_sig);
 		});
 	});
 });

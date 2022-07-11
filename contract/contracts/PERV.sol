@@ -46,10 +46,13 @@ contract PERV {
 
     // 以下、本実装
 
-    function getSignatures(bytes memory dataurl) public pure returns (bytes memory A_sig, bytes memory B_sig) {
-        bytes hashed_A_nonce = _hashed_A_nonce_from_dataurl(dataurl);
+    function getSignatures(bytes memory dataurl) public view returns (bytes memory A_sig, bytes memory B_sig) {
+        bytes memory hashed_A_nonce = _hashed_A_nonce_from_dataurl[dataurl];
         A_sig = _A_signed_dataurl[hashed_A_nonce];
         B_sig = _B_signed_dataurl[hashed_A_nonce];
+
+        require(keccak256(A_sig) != keccak256(bytes("0x")), "PERV (getSignatures): not found A_sig");
+        require(keccak256(B_sig) != keccak256(bytes("0x")), "PERV (getSignatures): not found B_sig");
     }
 
     function createQue(bytes memory hashed_A_nonce, bytes memory B_signed_hashed_A_nonce, bytes memory B_pubkey, bytes memory hashed_data) public {
@@ -90,7 +93,7 @@ contract PERV {
         _B_signed_dataurl[hashed_A_nonce] = B_signed_dataurl;
         _dataurl[hashed_A_nonce] = dataurl;
         _hashed_dataurl[hashed_A_nonce] = hashed_dataurl;
-        _hashed_A_nonce_from_dataurl[hashed_dataurl] = hashed_A_nonce; // クライアントCによる検証のために、dataurlからナンスを参照できるようにする。
+        _hashed_A_nonce_from_dataurl[dataurl] = hashed_A_nonce; // クライアントCによる検証のために、dataurlからナンスを参照できるようにする。
     }
 
     function putFinaility(bytes memory A_signed_dataurl, bytes memory A_pubkey, bytes memory A_nonce) public {
