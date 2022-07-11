@@ -21,7 +21,7 @@ contract PERV {
 
     mapping(bytes => address) private _B_address; // hashed_A_nonce -> B_address  アドレスの再計算を避けるため
 
-    mapping(bytes => bytes) private _hashed_A_nonce_from_dataurl; // hashed_A_nonce
+    mapping(bytes => bytes) private _hashed_A_nonce_from_dataurl; // dataurl -> hashed_A_nonce
 
 
     address private _owner;
@@ -34,12 +34,22 @@ contract PERV {
         return _owner;
     }
 
+    // 以下、テスト実装
+
     function hashdayo(bytes memory data) public pure returns(bytes32) {
         return keccak256(data);
     }
 
     function signdayo(bytes32 hash, bytes memory sig) public pure returns(address) {
         return  _recoverSigner(hash, sig);
+    }
+
+    // 以下、本実装
+
+    function getSignatures(bytes memory dataurl) public pure returns (bytes memory A_sig, bytes memory B_sig) {
+        bytes hashed_A_nonce = _hashed_A_nonce_from_dataurl(dataurl);
+        A_sig = _A_signed_dataurl[hashed_A_nonce];
+        B_sig = _B_signed_dataurl[hashed_A_nonce];
     }
 
     function createQue(bytes memory hashed_A_nonce, bytes memory B_signed_hashed_A_nonce, bytes memory B_pubkey, bytes memory hashed_data) public {

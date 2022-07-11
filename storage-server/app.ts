@@ -17,6 +17,7 @@ const provider = new ethers.providers.JsonRpcProvider(url);
 const _wallet: ethers.Wallet = new ethers.Wallet(
 	"0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
 );
+
 const wallet = _wallet.connect(provider);
 const contract = new ethers.Contract(
 	PERVAddress.address as string,
@@ -43,6 +44,11 @@ type GetDataParams = {
 	hex_hashed_data: string;
 };
 
+/**
+ * クライアントAから、データを提供したい意思を受ける
+ * Aから受け取ったハッシュ化されたナンスに署名をして返却する
+ * @req_params hex_hashed_a_nonce クライアントAが発行したナンス
+ */
 app.post(
 	"/req_nonce",
 	async (req: express.Request<RequestNonce>, res: express.Response) => {
@@ -65,6 +71,11 @@ app.post(
 	}
 );
 
+/**
+ * クライアントAからファイルアップロードのリクエストを受け取る。
+ * また、コントラクトにデータを受け取った記録を残す
+ * @req_params hex_hashed_b_nonce Bが発行したナンス
+ */
 app.post(
 	"/upload_file",
 	upload.single("file"),
@@ -105,9 +116,22 @@ app.post(
 	}
 );
 
+/**
+ * クライアントから受け通った:data_hashをもとに、対応するバイナリデータを返却する。
+ */
 app.get(
 	"/hash/:data_hash",
 	(req: express.Request<GetDataParams>, res: express.Response) => {
 		res.json("success");
 	}
 );
+
+/**
+ * 自分自身の公開鍵をクライアントに返す
+ * @req_params hex_hashed_data 対応するデータのハッシュ値
+ */
+app.get("/pubkey", (req: express.Request, res: express.Response) => {
+	res.json({
+		pubkey: wallet.publicKey,
+	});
+});
