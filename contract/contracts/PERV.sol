@@ -17,6 +17,7 @@ contract PERV {
     mapping(bytes => bytes) private _B_signed_dataurl;
 
     mapping(bytes => bytes) private _dataurl;
+    mapping(bytes => bytes) private _hashed_dataurl;
 
     mapping(bytes32 => bytes) private _hash_convert_to_bytes;
     mapping(bytes => address) private _B_address;
@@ -45,9 +46,7 @@ contract PERV {
         address signer = _recoverSigner(expected_A_nonce, B_signed_hashed_A_nonce);
 
         address B_address = _calculateAddressFromPubKey(B_pubkey);
-        require(signer == B_address, "PERV (createQue): not match the signer to the platformer");
-
-        console.log("hashed data:", string(hashed_data));
+        require(signer == B_address, "PERV (createQue): not match between the signer and the platformer");
 
         _B_pubkey[hashed_A_nonce] = B_pubkey;
         _B_address[B_pubkey] = B_address;
@@ -64,7 +63,7 @@ contract PERV {
         bytes memory B_pubkey = _B_pubkey[hashed_A_nonce];
         address B_address = _B_address[B_pubkey];
 
-        require(signer == B_address, "PERV (putIntent): not match the signer to platformer");
+        require(signer == B_address, "PERV (putIntent): not match between the signer and the platformer");
 
         bytes memory expected_hash = _hashed_data[hashed_A_nonce];
         uint256 hash_range = expected_hash.length;
@@ -72,27 +71,29 @@ contract PERV {
         uint256 start = dataurl_range - hash_range;
 
         bytes memory hash = slice(dataurl, start, hash_range);
-        console.log("url:", string(dataurl));
-        console.log("cal:", string(hash));
-        console.log("expected: ", string(expected_hash));
+        // console.log("url:", string(dataurl));
+        // console.log("cal:", string(hash));
+        // console.log("expected: ", string(expected_hash));
 
         require(keccak256(hash) == keccak256(expected_hash), "PERV (putIntent): not match the data hash");
 
         _B_signed_dataurl[hashed_A_nonce] = B_signed_dataurl;
         _dataurl[hashed_A_nonce] = dataurl;
+        _hashed_dataurl[hashed_A_nonce] = hashed_dataurl;
     }
 
     function putFinaility(bytes memory A_signed_dataurl, bytes memory A_pubkey, bytes memory A_nonce) public {
         bytes32 expected_A_nonce = keccak256(A_nonce);
         bytes memory expected_hashed_A_nonce = _hash_convert_to_bytes[expected_A_nonce];
-        require(keccak256(_B_signed_dataurl[expected_hashed_A_nonce]) == keccak256(bytes("")), "PERV: not match");
-        bytes memory dataurl = _dataurl[expected_hashed_A_nonce];
+        require(keccak256(_B_signed_dataurl[expected_hashed_A_nonce]) != keccak256(bytes("0x")), "PERV: not match");
 
-        bytes32 expected_dataurl = bytes32(dataurl);
-        address signer = _recoverSigner(expected_dataurl, A_signed_dataurl);
+        bytes memory hashed_dataurl = _hashed_dataurl[expected_hashed_A_nonce];
+        bytes32 expected_hash_dataurl = bytes32(hashed_dataurl);
+
+        address signer = _recoverSigner(expected_hash_dataurl, A_signed_dataurl);
         address A_address = _calculateAddressFromPubKey(A_pubkey);
 
-        require(signer == A_address, "PERV (putFinaility): not match the signer to provider");
+        require(signer == A_address, "PERV (putFinaility): not match between the signer and the provider");
 
         _A_pubkey[expected_hashed_A_nonce] = A_pubkey;
         _A_signed_dataurl[expected_hashed_A_nonce] = A_signed_dataurl;

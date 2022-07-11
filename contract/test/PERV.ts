@@ -121,10 +121,12 @@ describe("PERV", () => {
 					binary_hashed_nonce
 				);
 
-			const hex_A_signed_dataurl = await A.signMessage(binary_dataurl);
+			const hex_A_signed_dataurl = await A.signMessage(binary_hashed_dataurl);
+			const binary_nonce = ethers.utils.arrayify(hex_nonce);
+
 			await perv
 				.connect(signer_A)
-				.putFinaility(hex_A_signed_dataurl, A.publicKey, binary_dataurl);
+				.putFinaility(hex_A_signed_dataurl, A.publicKey, binary_nonce);
 		});
 		// it("Should generate nonce and sign it", async () => {
 		// 	const { perv, A, B, signer_A, signer_B } = await loadFixture(deployPERV);
