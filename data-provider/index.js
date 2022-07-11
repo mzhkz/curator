@@ -2,12 +2,13 @@ const program = require("commander");
 const ethers = require("ethers");
 const fs = require("fs");
 
-const wallet = new ethers.Wallet(
-	"0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
-);
-
 const url = "http://localhost:8465";
 const provider = new ethers.providers.JsonRpcProvider(url);
+
+const _wallet = new ethers.Wallet(
+	"0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+);
+const wallet = _wallet.connect(provider);
 const contract = new ethers.Contract("", "", wallet);
 
 program
@@ -79,6 +80,14 @@ program
       const hex_hashed_dataurl = ethers.utils.keccak256(hex_dataurl);
       const binary_hashed_dataurl = ethers.utils.arrayify(hex_hashed_dataurl);
       const hex_A_signed_dataurl = await wallet.signMessage(binary_hashed_dataurl);
+
+      const hex_nonce = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(nonce));
+      const binary_nonce = ethers.utils.arrayify(hex_nonce);
+      const a_publickey = wallet.publicKey
+
+      const tx = await contract.putFinaility(hex_A_signed_dataurl, a_publickey, binary_nonce);
+      await tx.wait();
+      console.log("Complete!")
 });
   
 
