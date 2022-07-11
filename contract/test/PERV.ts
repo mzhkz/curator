@@ -87,6 +87,10 @@ describe("PERV", () => {
 
 			const data = "12345";
 			const hex_hashed_data = ethers.utils.id(data);
+			const hex_str_hashed_data = ethers.utils.hexlify(
+				ethers.utils.toUtf8Bytes(hex_hashed_data)
+			);
+			const binary_hashed_data = ethers.utils.arrayify(hex_str_hashed_data);
 
 			await perv
 				.connect(signer_A)
@@ -94,21 +98,28 @@ describe("PERV", () => {
 					binary_hashed_nonce,
 					hex_B_signed_hashed_nonce,
 					B.publicKey,
-					hex_hashed_data
+					binary_hashed_data
 				);
 
-			// const dataurl = "https://localhost:1209/" + hex_hashed_data;
-			const dataurl = "12345";
+			const dataurl = "https://localhost:1209/" + hex_hashed_data;
 			const hex_dataurl = ethers.utils.hexlify(
 				ethers.utils.toUtf8Bytes(dataurl)
 			);
-			const hex32_dataurl = ethers.utils.formatBytes32String(hex_dataurl);
-			const binary_dataurl = ethers.utils.arrayify(hex32_dataurl);
-			const hex_B_signed_dataurl = await B.signMessage(binary_dataurl);
+			// const hex32_dataurl = ethers.utils.formatBytes32String(hex_dataurl);
+			// const binary_dataurl = ethers.utils.arrayify(hex32_dataurl);
+			const hex_hashed_dataurl = ethers.utils.keccak256(hex_dataurl);
+			const binary_hashed_dataurl = ethers.utils.arrayify(hex_hashed_dataurl);
+			const binary_dataurl = ethers.utils.arrayify(hex_dataurl);
+			const hex_B_signed_dataurl = await B.signMessage(binary_hashed_dataurl);
 
 			await perv
 				.connect(signer_B)
-				.putIntent(binary_dataurl, hex_B_signed_dataurl, binary_hashed_nonce);
+				.putIntent(
+					binary_dataurl,
+					binary_hashed_dataurl,
+					hex_B_signed_dataurl,
+					binary_hashed_nonce
+				);
 
 			const hex_A_signed_dataurl = await A.signMessage(binary_dataurl);
 			await perv
