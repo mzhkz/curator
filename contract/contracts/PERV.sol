@@ -43,8 +43,8 @@ contract PERV {
     function createQue(bytes memory hashed_A_nonce, bytes memory B_signed_hashed_A_nonce, bytes memory B_pubkey, bytes memory hashed_data) public {
         bytes32 expected_A_nonce = bytes32(hashed_A_nonce);
         address signer = _recoverSigner(expected_A_nonce, B_signed_hashed_A_nonce);
-        address B_address = _calculateAddressFromPubKey(B_pubkey);
 
+        address B_address = _calculateAddressFromPubKey(B_pubkey);
         require(signer == B_address, "PERV (createQue): not match the signer to the platformer");
 
         _B_pubkey[hashed_A_nonce] = B_pubkey;
@@ -53,14 +53,15 @@ contract PERV {
         _hash_convert_to_bytes[bytes32(hashed_A_nonce)] = hashed_A_nonce; // 処理の都合上
     }
 
-    function putIntent(bytes memory B_signed_dataurl, bytes memory hashed_A_nonce, bytes memory dataurl) public {
-        bytes32 expected_dataurl = bytes32(dataurl);
+    function putIntent(bytes memory dataurl, bytes memory B_signed_dataurl, bytes memory hashed_A_nonce) public {
+       bytes32 expected_dataurl = bytes32(dataurl);
         address signer = _recoverSigner(expected_dataurl, B_signed_dataurl);
+
         bytes memory B_pubkey = _B_pubkey[hashed_A_nonce];
         address B_address = _B_address[B_pubkey];
         
-        console.log(signer);
-        console.log(B_address);
+        // console.log(signer);
+        // console.log(B_address);
 
         require(signer == B_address, "PERV (putIntent): not match the signer to platformer");
 
@@ -70,6 +71,8 @@ contract PERV {
         uint256 start = dataurl_range - hash_range;
 
         bytes32 hash = bytes32(slice(dataurl, start, hash_range));
+        console.log("url:", string(abi.encodePacked(expected_dataurl)));
+        // console.log(string(abi.encodePacked(hash)));
 
         require(hash == expected_hash, "PERV (putIntent): not match the data hash");
 
