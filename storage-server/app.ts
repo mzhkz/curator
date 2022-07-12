@@ -57,15 +57,16 @@ type GetDataParams = {
 app.post(
 	"/req_nonce",
 	async (req: express.Request<RequestNonce>, res: express.Response) => {
+		console.log("#### req_nonce");
 		const hex_hashed_a_nonce = req.body.hex_hashed_a_nonce;
+		console.log(`A nonce: ${hex_hashed_a_nonce}`);
 		const binary_hashed_a_nonce = ethers.utils.arrayify(hex_hashed_a_nonce);
 		const hex_b_signed_hashed_nonce = await wallet.signMessage(
 			binary_hashed_a_nonce
 		);
 		const hex_b_public_key = wallet.publicKey;
-		const hex_hashed_b_nonce = ethers.utils.sha256(
-			hex_hashed_a_nonce + "server"
-		);
+		const hex_hashed_b_nonce = ethers.utils.id(hex_hashed_a_nonce + "server");
+		console.log(`B nonce: ${hex_hashed_b_nonce}`);
 
 		nonces[hex_hashed_b_nonce] = hex_hashed_a_nonce;
 		res.json({
@@ -89,6 +90,7 @@ app.post(
 		res: express.Response,
 		next: express.NextFunction
 	) => {
+		console.log("#### upload_file");
 		const hex_hashed_b_nonce = req.body.hex_hashed_b_nonce;
 		if (nonces[hex_hashed_b_nonce] === undefined) {
 			res.status(401).json("not correct hex_hashed_b_nonce value.");
@@ -96,7 +98,7 @@ app.post(
 		const file_path = req.file.path;
 		const buffer = await fs.readFileSync(file_path);
 		const hex_hashed_data = ethers.utils.keccak256(buffer);
-		const dataurl = "http://localhost:3000/" + hex_hashed_data;
+		const dataurl = "http://localhost:3000/hash/" + hex_hashed_data;
 		const hex_dataurl = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(dataurl));
 		const hex_hashed_dataurl = ethers.utils.keccak256(hex_dataurl);
 		const binary_hashed_dataurl = ethers.utils.arrayify(hex_hashed_dataurl);

@@ -2,11 +2,12 @@ const program = require("commander");
 const ethers = require("ethers");
 const fs = require("fs");
 const axios = require("axios");
+var FormData = require('form-data');
 
 const PERVArtifact = require("./dest/PERV.json");
 const PERVAddress  = require("./dest/PERV-address.json");
 
-const url = "http://localhost:8465";
+const url = "http://localhost:8545";
 const provider = new ethers.providers.JsonRpcProvider(url);
 
 const _wallet = new ethers.Wallet(
@@ -31,10 +32,10 @@ program
     .action(async (address, nonce) => {
       const hex_a_nonce = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(nonce));
       const hex_hashed_a_nonce = ethers.utils.keccak256(hex_a_nonce);
+      console.log(hex_hashed_a_nonce)
 
-      const response = axios.post(`${address}/req_nonce`, body = { hex_hashed_a_nonce });
+      const response = await axios.post(`${address}/req_nonce`, body = { hex_hashed_a_nonce });
       const { hex_b_sig_hash_a_nonce, hex_b_public_key, hex_hashed_b_nonce } = response.data
-      console.log(`nonce: ${nonce}`);
       console.log(`hex_hashed_a_nonce: ${hex_hashed_a_nonce}`)
       console.log(`hex_b_sig_hash_a_nonce: ${hex_b_sig_hash_a_nonce}`)
       console.log(`hex_b_public_key: ${hex_b_public_key}`)
@@ -47,7 +48,7 @@ program
   .command("que [hex_b_sig_hash_a_nonce] [hex_hashed_a_nonce] [hex_b_public_key] [file_path]") // command を使用する場合
   .description("to issue a transaction which is included B signature, B public key and a hash of the data.")
     .action(async (hex_b_sig_hash_a_nonce, hex_hashed_a_nonce, hex_b_public_key, file_path) => {
-        const buffer = await fs.readFile(file_path);
+        const buffer = await fs.readFileSync(file_path);
         const hex_hashed_data = ethers.utils.keccak256(buffer);
         const hex_str_hashed_data = ethers.utils.hexlify(
           ethers.utils.toUtf8Bytes(hex_hashed_data)
@@ -56,7 +57,7 @@ program
       const binary_hashed_a_nonce = ethers.utils.arrayify(hex_hashed_a_nonce);
       const tx = await contract.createQue(binary_hashed_a_nonce, hex_b_sig_hash_a_nonce, hex_b_public_key, binary_hashed_data);
       await tx.wait();
-      console.log(`transaction id: ${tx.id}`);
+      console.log(`transaction id: ${tx.hash}`);
       console.log("Done!")
 });
 
@@ -69,10 +70,11 @@ program
         params.append("file", readStream);
         params.append("hex_hashed_b_nonce", hex_hashed_b_nonce);
 
-        const response_post = axios.post(`${address}/req_nonce`, params);
+      const response_post = await axios.post(`${address}/upload_file`, params);
+      console.log(response_post.data);
         const { dataurl } = response_post.data
 
-        const response_get = axios.get(dataurl, {}, {responseType: "arraybuffer"});
+      const response_get = await axios.get(dataurl, {}, { responseType: "arraybuffer" });
         const buffer = Buffer.from(response_get.data, 'binary');
         const hex_hashed_data = ethers.utils.keccak256(buffer);
         
@@ -98,7 +100,7 @@ program
       const tx = await contract.putFinaility(hex_A_signed_dataurl, a_publickey, binary_nonce);
       await tx.wait();
 
-      console.log(`transaction id: ${tx.id}`);
+      console.log(`transaction id: ${tx.hash}`);
       console.log("Complete!")
 });
   

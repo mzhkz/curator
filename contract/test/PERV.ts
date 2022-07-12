@@ -79,6 +79,7 @@ describe("PERV", () => {
 			const nonce = "abcede";
 			const hex_nonce = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(nonce));
 			const hex_hashed_nonce = ethers.utils.keccak256(hex_nonce);
+			console.log(hex_hashed_nonce);
 			const binary_hashed_nonce = ethers.utils.arrayify(hex_hashed_nonce);
 
 			const hex_B_signed_hashed_nonce = await B.signMessage(
