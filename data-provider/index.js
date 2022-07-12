@@ -36,10 +36,12 @@ program
 
       const response = await axios.post(`${address}/req_nonce`, body = { hex_hashed_a_nonce });
       const { hex_b_sig_hash_a_nonce, hex_b_public_key, hex_hashed_b_nonce } = response.data
-      console.log(`hex_hashed_a_nonce: ${hex_hashed_a_nonce}`)
-      console.log(`hex_b_sig_hash_a_nonce: ${hex_b_sig_hash_a_nonce}`)
-      console.log(`hex_b_public_key: ${hex_b_public_key}`)
-      console.log(`hex_hashed_b_nonce: ${hex_hashed_b_nonce}`)
+      console.log("OUTPUT (req): ")
+      console.log("")
+      console.log(` hex_hashed_a_nonce: ${hex_hashed_a_nonce}`)
+      console.log(` hex_b_sig_hash_a_nonce: ${hex_b_sig_hash_a_nonce}`)
+      console.log(` hex_b_public_key: ${hex_b_public_key}`)
+      console.log(` hex_hashed_b_nonce: ${hex_hashed_b_nonce}`)
       console.log("")
       console.log("Done!")
     });
@@ -57,7 +59,10 @@ program
       const binary_hashed_a_nonce = ethers.utils.arrayify(hex_hashed_a_nonce);
       const tx = await contract.createQue(binary_hashed_a_nonce, hex_b_sig_hash_a_nonce, hex_b_public_key, binary_hashed_data);
       await tx.wait();
-      console.log(`transaction id: ${tx.hash}`);
+      console.log("OUTPUT (que): ")
+      console.log("")
+      console.log(` transaction id: ${tx.hash}`);
+      console.log("")
       console.log("Done!")
 });
 
@@ -70,16 +75,17 @@ program
         params.append("file", readStream);
         params.append("hex_hashed_b_nonce", hex_hashed_b_nonce);
 
-      const response_post = await axios.post(`${address}/upload_file`, params);
-      console.log(response_post.data);
+        const response_post = await axios.post(`${address}/upload_file`, params);
         const { dataurl } = response_post.data
 
-      const response_get = await axios.get(dataurl, {}, { responseType: "arraybuffer" });
+        const response_get = await axios.get(dataurl, {}, { responseType: "arraybuffer" });
         const buffer = Buffer.from(response_get.data, 'binary');
         const hex_hashed_data = ethers.utils.keccak256(buffer);
         
-        console.log(`dataurl: ${dataurl}`)
-        console.log(`confirm hash: ${hex_hashed_data}`)
+        console.log("OUTPUT (upload): ")
+        console.log("")
+        console.log(` dataurl: ${dataurl}`)
+        console.log(` confirm hash: ${hex_hashed_data}`)
         console.log("")
         console.log("Done!")
     });
@@ -99,9 +105,11 @@ program
 
       const tx = await contract.putFinaility(hex_A_signed_dataurl, a_publickey, binary_nonce);
       await tx.wait();
-
-      console.log(`transaction id: ${tx.hash}`);
-      console.log("Complete!")
+      console.log("OUTPUT (final): ")
+      console.log("")
+      console.log(` transaction id: ${tx.hash}`);
+      console.log("")
+      console.log("All flow completed!")
 });
   
 
