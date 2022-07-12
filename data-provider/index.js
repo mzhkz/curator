@@ -1,6 +1,10 @@
 const program = require("commander");
 const ethers = require("ethers");
 const fs = require("fs");
+const axios = require("axios");
+
+const PERVArtifact = require("./dest/PERV.json");
+const PERVAddress  = require("./dest/PERV-address.json");
 
 const url = "http://localhost:8465";
 const provider = new ethers.providers.JsonRpcProvider(url);
@@ -28,7 +32,7 @@ program
       const hex_a_nonce = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(nonce));
       const hex_hashed_a_nonce = ethers.utils.keccak256(hex_a_nonce);
 
-      const response = axios.post(`${address}/req_nonce`, body={hex_hashed_a_nonce});
+      const response = axios.post(`${address}/req_nonce`, body = { hex_hashed_a_nonce });
       const { hex_b_sig_hash_a_nonce, hex_b_public_key, hex_hashed_b_nonce } = response.data
       console.log(`nonce: ${nonce}`);
       console.log(`hex_hashed_a_nonce: ${hex_hashed_a_nonce}`)
@@ -46,17 +50,19 @@ program
         const buffer = await fs.readFile(file_path);
         const hex_hashed_data = ethers.utils.keccak256(buffer);
         const hex_str_hashed_data = ethers.utils.hexlify(
-				ethers.utils.toUtf8Bytes(hex_hashed_data)
-			);
-		const binary_hashed_data = ethers.utils.arrayify(hex_str_hashed_data);
-        const binary_hashed_a_nonce = ethers.utils.arrayify(hex_hashed_a_nonce);
-
-        const tx = await contract.createQue(binary_hashed_a_nonce, hex_b_sig_hash_a_nonce, hex_b_public_key, binary_hashed_data);
+          ethers.utils.toUtf8Bytes(hex_hashed_data)
+      );
+      const binary_hashed_data = ethers.utils.arrayify(hex_str_hashed_data);
+      const binary_hashed_a_nonce = ethers.utils.arrayify(hex_hashed_a_nonce);
+      const tx = await contract.createQue(binary_hashed_a_nonce, hex_b_sig_hash_a_nonce, hex_b_public_key, binary_hashed_data);
+      await tx.wait();
+      console.log(`transaction id: ${tx.id}`);
+      console.log("Done!")
 });
 
 program
   .command("upload [address] [file_path] [hex_hashed_b_nonce]") // command を使用する場合
-  .description("request to update data to the server, and get a sig B nonce.")
+  .description("request to upload the data to the server, and get a sig B nonce.")
     .action(async (address, file_path, hex_hashed_b_nonce) => {
         const params = new FormData();
         const readStream = fs.createReadStream(file_path)
@@ -78,7 +84,7 @@ program
 
 program
   .command("final [dataurl] [nonce]") // command を使用する場合
-  .description("request to update data to the server, and get a sig B nonce.")
+  .description("to issue a transaction which is included A(my) signature, and the nonce")
     .action(async (dataurl, nonce) => {
       const hex_dataurl = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(dataurl));
       const hex_hashed_dataurl = ethers.utils.keccak256(hex_dataurl);
@@ -91,13 +97,15 @@ program
 
       const tx = await contract.putFinaility(hex_A_signed_dataurl, a_publickey, binary_nonce);
       await tx.wait();
+
+      console.log(`transaction id: ${tx.id}`);
       console.log("Complete!")
 });
   
 
 program.on("--help", () => {
   console.log("");
-  console.log("  my fist CLI:");
+  console.log("  PERV Data Provider CLI:");
 });
 
 // これで shell で実行する際に与えた引数をパースする

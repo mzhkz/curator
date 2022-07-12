@@ -1,6 +1,7 @@
 import express from "express";
-import ethers from "ethers";
+import { ethers } from "ethers";
 import multer from "multer";
+import path from "path";
 import fs from "fs";
 import os from "os";
 
@@ -8,11 +9,12 @@ import PERVArtifact from "./dest/PERV.json";
 import PERVAddress from "./dest/PERV-address.json";
 
 const app: express.Express = express();
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const upload = multer({ dest: os.tmpdir() });
+const upload = multer({ dest: path.join(__dirname, "storage") });
 
-const url = "http://localhost:8465";
+const url = "http://127.0.0.1:8545/";
 const provider = new ethers.providers.JsonRpcProvider(url);
 const _wallet: ethers.Wallet = new ethers.Wallet(
 	"0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
@@ -29,6 +31,9 @@ const contract = new ethers.Contract(
 const nonces: { [hashed_b_nonce: string]: string } = {};
 
 app.listen(3000, () => {
+	console.log(`connected at: ${provider.connection.url}`);
+	console.log(`address: ${wallet.address}`);
+	console.log(`publickey: ${wallet.publicKey}`);
 	console.log("Start on port 3000.");
 });
 
