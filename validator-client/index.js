@@ -42,21 +42,15 @@ program
         const binary_dataurl = ethers.utils.arrayify(hex_dataurl);
         const hex_hashed_dataurl = ethers.utils.keccak256(hex_dataurl);
         const binary_hashed_dataurl = ethers.utils.arrayify(hex_hashed_dataurl);
-        const hex_double_hashed_dataurl = ethers.utils.keccak256(binary_hashed_dataurl);
+        // const hex_double_hashed_dataurl = ethers.utils.keccak256(hex_hashed_dataurl);
         
         const res = await contract.getSignatures(binary_dataurl);
         const hex_A_signed_dataurl = res.A_sig
         const hex_B_signed_dataurl = res.B_sig
-
-        console.log(hex_hashed_dataurl)
-        console.log(hex_A_signed_dataurl)
-        console.log(hex_B_signed_dataurl)
         
-        const hex_b_signer = ethers.utils.recoverAddress(hex_double_hashed_dataurl, hex_B_signed_dataurl);
-        const hex_b_address = ethers.utils.computeAddress(hex_b_public_key);
-
-        console.log(hex_b_signer)
-        console.log(hex_b_address)
+        // const hex_b_signer = ethers.utils.recoverAddress(ethers.utils.arrayify(hex_hashed_dataurl), hex_B_signed_dataurl);
+        const hex_b_address = ethers.utils.computeAddress(ethers.utils.arrayify(hex_b_public_key));
+        const hex_b_signer = await contract.checksign(binary_hashed_dataurl, hex_B_signed_dataurl)
 
         if (hex_b_signer !== hex_b_address) { 
             throw Error("not match between B_address and B_signer");
@@ -66,11 +60,37 @@ program
         console.log(CLI_BOLD + "OUTPUT (checksign): " + CLI_COLOR_RESET)
         console.log("")
         console.log(CLI_GREEN + ` hex_b_public_key: ${hex_b_public_key}`)
+        console.log(CLI_GREEN + ` hex_b_signer: ${hex_b_signer}`)
         console.log(CLI_GREEN + ` hex_b_address: ${hex_b_address}`)
         console.log(CLI_GREEN + ` hex_A_signed_dataurl: ${hex_A_signed_dataurl}`)
         console.log(CLI_GREEN + ` hex_B_signed_dataurl: ${hex_B_signed_dataurl}`)
         console.log("")
         console.log(CLI_BLUE + "Done!")
+        console.log("")
+    });
+
+program
+  .command("checkdata [dataurl]") // command を使用する場合
+  .description("to request to update data to the server, and get a sig B nonce.")
+    .action(async (dataurl) => {
+        const response_get = await axios.get(dataurl, {}, { responseType: "arraybuffer" });
+        const buffer = Buffer.from(response_get.data, 'binary');
+        const hex_hashed_data = ethers.utils.keccak256(buffer);
+
+        const hash_length = hex_hashed_data.length
+        const hex_expected_hash = dataurl.substring(dataurl.length - hash_length, dataurl.length);
+
+        if (hex_hashed_data !== hex_expected_hash) { 
+            throw Error("not match between the hash by the data and the hash included in the hash");
+        }
+
+        console.log("")
+        console.log(CLI_BOLD + "OUTPUT (checksign): " + CLI_COLOR_RESET)
+        console.log("")
+        console.log(CLI_GREEN + ` hex_hashed_data: ${hex_hashed_data}`)
+        console.log(CLI_GREEN + ` hex_expected_hash: ${hex_expected_hash}`)
+        console.log("")
+        console.log(CLI_BLUE + CLI_BOLD + "All steps has benn completed!")
         console.log("")
     });
   

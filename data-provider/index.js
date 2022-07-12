@@ -67,7 +67,7 @@ program
       const tx = await contract.createQue(binary_hashed_a_nonce, hex_b_sig_hash_a_nonce, hex_b_public_key, binary_hashed_data);
       await tx.wait();
       console.log("")
-      console.log(CLI_BOLD + "OUTPUT (que): " + CLI_RESET)
+      console.log(CLI_BOLD + "OUTPUT (que): " + CLI_COLOR_RESET)
       console.log("")
       console.log(CLI_GREEN + ` hex_hashed_data: ${hex_hashed_data}`);
       console.log(CLI_GREEN + ` transaction id: ${tx.hash}`);
@@ -93,7 +93,7 @@ program
         const hex_hashed_data = ethers.utils.keccak256(buffer);
       
         console.log("")
-        console.log(CLI_BOLD + "OUTPUT (upload): " + CLI_RESET)
+        console.log(CLI_BOLD + "OUTPUT (upload): " + CLI_COLOR_RESET)
         console.log("")
         console.log(CLI_GREEN + ` dataurl: ${dataurl}`)
         console.log(CLI_GREEN + ` confirm hash: ${hex_hashed_data}`)
@@ -118,13 +118,13 @@ program
       const tx = await contract.putFinaility(hex_A_signed_dataurl, a_publickey, binary_nonce);
       await tx.wait();
       console.log("")
-      console.log(CLI_BOLD + "OUTPUT (final): " + CLI_RESET)
+      console.log(CLI_BOLD + "OUTPUT (final): " + CLI_COLOR_RESET)
       console.log("")
       console.log(CLI_GREEN + ` hex_hashed_dataurl: ${hex_hashed_dataurl}`);
       console.log(CLI_GREEN + ` hex_A_signed_dataurl: ${hex_A_signed_dataurl}`);
       console.log(CLI_GREEN + ` transaction id: ${tx.hash}`);
       console.log("")
-      console.log(CLI_BLUE + "All flow completed!")
+      console.log(CLI_BLUE + CLI_BOLD +"All steps has been completed!")
       console.log("")
 });
   

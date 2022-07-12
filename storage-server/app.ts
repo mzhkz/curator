@@ -63,14 +63,12 @@ app.post(
 	async (req: express.Request<RequestNonce>, res: express.Response) => {
 		console.log("#### req_nonce");
 		const hex_hashed_a_nonce = req.body.hex_hashed_a_nonce;
-		console.log(`A nonce: ${hex_hashed_a_nonce}`);
 		const binary_hashed_a_nonce = ethers.utils.arrayify(hex_hashed_a_nonce);
 		const hex_b_signed_hashed_nonce = await wallet.signMessage(
 			binary_hashed_a_nonce
 		);
 		const hex_b_public_key = wallet.publicKey;
 		const hex_hashed_b_nonce = ethers.utils.id(hex_hashed_a_nonce + "server");
-		console.log(`B nonce: ${hex_hashed_b_nonce}`);
 
 		nonces[hex_hashed_b_nonce] = hex_hashed_a_nonce;
 		res.json({

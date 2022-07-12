@@ -22,6 +22,7 @@ contract PERV {
     mapping(bytes => address) private _B_address; // hashed_A_nonce -> B_address  アドレスの再計算を避けるため
 
     mapping(bytes => bytes) private _hashed_A_nonce_from_dataurl; // dataurl -> hashed_A_nonce
+    mapping(bytes => uint8) private _phase; // 0: none, 1: received que, 2: received intent from serrver, 3: finished all flow.
 
 
     address private _owner;
@@ -34,15 +35,9 @@ contract PERV {
         return _owner;
     }
 
-    // // 以下、テスト実装
-
-    // function hashdayo(bytes memory data) public pure returns(bytes32) {
-    //     return keccak256(data);
-    // }
-
-    // function signdayo(bytes32 hash, bytes memory sig) public pure returns(address) {
-    //     return  _recoverSigner(hash, sig);
-    // }
+    function checksign(bytes32 hash, bytes memory sig) public pure returns(address) {
+        return  _recoverSigner(hash, sig);
+    }
 
     // 以下、本実装
 
@@ -56,6 +51,7 @@ contract PERV {
     }
 
     function createQue(bytes memory hashed_A_nonce, bytes memory B_signed_hashed_A_nonce, bytes memory B_pubkey, bytes memory hashed_data) public {
+        require(_phase[hashed_A_nonce] == 0, "PERV (putIntent): the nonce has been expired");
         bytes32 expected_A_nonce = bytes32(hashed_A_nonce);
         address signer = _recoverSigner(expected_A_nonce, B_signed_hashed_A_nonce);
 
@@ -65,9 +61,11 @@ contract PERV {
         _B_pubkey[hashed_A_nonce] = B_pubkey;
         _B_address[B_pubkey] = B_address;
         _hashed_data[hashed_A_nonce] = hashed_data;
+        _phase[hashed_A_nonce] = 1;
     }
 
     function putIntent(bytes memory dataurl, bytes memory hashed_dataurl, bytes memory B_signed_dataurl, bytes memory hashed_A_nonce) public {
+        require(_phase[hashed_A_nonce] == 1, "PERV (putIntent): the nonce has been expired");
         require(bytes32(hashed_dataurl) == keccak256(dataurl), "PERV (putIntent): not match between the hashed_dataurl to dataurl");
 
         bytes32 expected_hash_dataurl = bytes32(hashed_dataurl);
@@ -84,21 +82,20 @@ contract PERV {
         uint256 start = dataurl_range - hash_range;
 
         bytes memory hash = slice(dataurl, start, hash_range);
-        // console.log("url:", string(dataurl));
-        // console.log("cal:", string(hash));
-        // console.log("expected: ", string(expected_hash));
 
         require(keccak256(hash) == keccak256(expected_hash), "PERV (putIntent): not match the data hash");
 
         _B_signed_dataurl[hashed_A_nonce] = B_signed_dataurl;
         _dataurl[hashed_A_nonce] = dataurl;
         _hashed_dataurl[hashed_A_nonce] = hashed_dataurl;
+        _phase[hashed_A_nonce] = 2;
         _hashed_A_nonce_from_dataurl[dataurl] = hashed_A_nonce; // クライアントCによる検証のために、dataurlからナンスを参照できるようにする。
     }
 
     function putFinaility(bytes memory A_signed_dataurl, bytes memory A_pubkey, bytes memory A_nonce) public {
         bytes32 expected_A_nonce = keccak256(A_nonce);
         bytes memory expected_hashed_A_nonce = abi.encodePacked(expected_A_nonce);
+        require(_phase[expected_hashed_A_nonce] == 2, "PERV (putIntent): the nonce has been expired");
         require(keccak256(_B_signed_dataurl[expected_hashed_A_nonce]) != keccak256(bytes("0x")), "PERV: not match");
 
         bytes memory hashed_dataurl = _hashed_dataurl[expected_hashed_A_nonce];
@@ -111,6 +108,7 @@ contract PERV {
 
         _A_pubkey[expected_hashed_A_nonce] = A_pubkey;
         _A_signed_dataurl[expected_hashed_A_nonce] = A_signed_dataurl;
+        _phase[expected_hashed_A_nonce] = 3;
     }
 
     function _calculateAddressFromPubKey(bytes memory key) public pure returns (address addr) {
