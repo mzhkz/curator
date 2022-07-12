@@ -34,15 +34,15 @@ contract PERV {
         return _owner;
     }
 
-    // 以下、テスト実装
+    // // 以下、テスト実装
 
-    function hashdayo(bytes memory data) public pure returns(bytes32) {
-        return keccak256(data);
-    }
+    // function hashdayo(bytes memory data) public pure returns(bytes32) {
+    //     return keccak256(data);
+    // }
 
-    function signdayo(bytes32 hash, bytes memory sig) public pure returns(address) {
-        return  _recoverSigner(hash, sig);
-    }
+    // function signdayo(bytes32 hash, bytes memory sig) public pure returns(address) {
+    //     return  _recoverSigner(hash, sig);
+    // }
 
     // 以下、本実装
 

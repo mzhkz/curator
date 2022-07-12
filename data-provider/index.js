@@ -120,6 +120,8 @@ program
       console.log("")
       console.log(CLI_BOLD + "OUTPUT (final): " + CLI_RESET)
       console.log("")
+      console.log(CLI_GREEN + ` hex_hashed_dataurl: ${hex_hashed_dataurl}`);
+      console.log(CLI_GREEN + ` hex_A_signed_dataurl: ${hex_A_signed_dataurl}`);
       console.log(CLI_GREEN + ` transaction id: ${tx.hash}`);
       console.log("")
       console.log(CLI_BLUE + "All flow completed!")

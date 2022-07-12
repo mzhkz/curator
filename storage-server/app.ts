@@ -49,6 +49,10 @@ type GetDataParams = {
 	hex_hashed_data: string;
 };
 
+type SignNonce = {
+	hex_hashed_c_nonce: string;
+};
+
 /**
  * クライアントAから、データを提供したい意思を受ける
  * Aから受け取ったハッシュ化されたナンスに署名をして返却する
@@ -101,8 +105,8 @@ app.post(
 		const dataurl = "http://localhost:3000/hash/" + hex_hashed_data;
 		const hex_dataurl = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(dataurl));
 		const hex_hashed_dataurl = ethers.utils.keccak256(hex_dataurl);
-		const binary_hashed_dataurl = ethers.utils.arrayify(hex_hashed_dataurl);
 		const binary_dataurl = ethers.utils.arrayify(hex_dataurl);
+		const binary_hashed_dataurl = ethers.utils.arrayify(hex_hashed_dataurl);
 		const hex_B_signed_dataurl = await wallet.signMessage(
 			binary_hashed_dataurl
 		);
@@ -130,11 +134,12 @@ app.post(
 
 /**
  * クライアントから受け通った:data_hashをもとに、対応するバイナリデータを返却する。
+ * @req_params hex_hashed_data 対応するデータのハッシュ値
  */
 app.get(
 	"/hash/:hex_hashed_data",
 	(req: express.Request<GetDataParams>, res: express.Response) => {
-		console.log(req.params.hex_hashed_data);
+		console.log("#### hash");
 		res.download(
 			path.join(path.join(__dirname, "storage"), req.params.hex_hashed_data)
 		);
@@ -146,7 +151,9 @@ app.get(
  * @req_params hex_hashed_data 対応するデータのハッシュ値
  */
 app.get("/pubkey", (req: express.Request, res: express.Response) => {
+	console.log("#### pubkey");
+	const hex_b_public_key = wallet.publicKey;
 	res.json({
-		pubkey: wallet.publicKey,
+		hex_b_public_key: hex_b_public_key,
 	});
 });
