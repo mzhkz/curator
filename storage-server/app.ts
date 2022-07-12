@@ -109,6 +109,11 @@ app.post(
 		const hex_hashed_a_nonce = nonces[hex_hashed_b_nonce];
 		const binary_hashed_nonce = ethers.utils.arrayify(hex_hashed_a_nonce);
 
+		await fs.renameSync(
+			file_path,
+			path.join(path.join(__dirname, "storage"), hex_hashed_data)
+		);
+
 		//send transaction
 		const tx = await contract.putIntent(
 			binary_dataurl,
@@ -127,9 +132,12 @@ app.post(
  * クライアントから受け通った:data_hashをもとに、対応するバイナリデータを返却する。
  */
 app.get(
-	"/hash/:data_hash",
+	"/hash/:hex_hashed_data",
 	(req: express.Request<GetDataParams>, res: express.Response) => {
-		res.json("success");
+		console.log(req.params.hex_hashed_data);
+		res.download(
+			path.join(path.join(__dirname, "storage"), req.params.hex_hashed_data)
+		);
 	}
 );
 
