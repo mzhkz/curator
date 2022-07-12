@@ -20,9 +20,11 @@ const contract = new ethers.Contract(
 	wallet
 );
 
+const CLI_COLOR_RESET = "\x1b[0m";
 const CLI_GREEN = "\x1b[32m";
 const CLI_RESET = "\x1b[37m";
 const CLI_BLUE = "\x1b[34m";
+const CLI_BOLD = "\x1b[1m";
 
 program
   .version("1.0.0", "-v, --version") // version の設定
@@ -40,14 +42,14 @@ program
       const response = await axios.post(`${address}/req_nonce`, body = { hex_hashed_a_nonce });
       const { hex_b_sig_hash_a_nonce, hex_b_public_key, hex_hashed_b_nonce } = response.data
       console.log("")
-      console.log(CLI_BLUE + "OUTPUT (req): " + CLI_RESET)
+      console.log(CLI_BOLD + "OUTPUT (req): " + CLI_COLOR_RESET)
       console.log("")
       console.log(CLI_GREEN + ` hex_hashed_a_nonce: ${hex_hashed_a_nonce}`)
       console.log(CLI_GREEN + ` hex_b_sig_hash_a_nonce: ${hex_b_sig_hash_a_nonce}`)
       console.log(CLI_GREEN + ` hex_b_public_key: ${hex_b_public_key}`)
       console.log(CLI_GREEN + ` hex_hashed_b_nonce: ${hex_hashed_b_nonce}`)
       console.log("")
-      console.log(CLI_RESET + "Done!")
+      console.log(CLI_BLUE + "Done!")
       console.log("")
     });
 
@@ -65,12 +67,12 @@ program
       const tx = await contract.createQue(binary_hashed_a_nonce, hex_b_sig_hash_a_nonce, hex_b_public_key, binary_hashed_data);
       await tx.wait();
       console.log("")
-      console.log(CLI_BLUE + "OUTPUT (que): " + CLI_RESET)
+      console.log(CLI_BOLD + "OUTPUT (que): " + CLI_RESET)
       console.log("")
       console.log(CLI_GREEN + ` hex_hashed_data: ${hex_hashed_data}`);
       console.log(CLI_GREEN + ` transaction id: ${tx.hash}`);
       console.log("")
-      console.log(CLI_RESET + "Done!")
+      console.log(CLI_BLUE + "Done!")
       console.log("")
 });
 
@@ -91,12 +93,13 @@ program
         const hex_hashed_data = ethers.utils.keccak256(buffer);
       
         console.log("")
-        console.log(CLI_BLUE + "OUTPUT (upload): " + CLI_RESET)
+        console.log(CLI_BOLD + "OUTPUT (upload): " + CLI_RESET)
         console.log("")
         console.log(CLI_GREEN + ` dataurl: ${dataurl}`)
         console.log(CLI_GREEN + ` confirm hash: ${hex_hashed_data}`)
         console.log("")
-        console.log(CLI_RESET + "Done!")
+        console.log(CLI_BLUE + "Done!")
+        console.log("")
     });
 
 program
@@ -115,11 +118,11 @@ program
       const tx = await contract.putFinaility(hex_A_signed_dataurl, a_publickey, binary_nonce);
       await tx.wait();
       console.log("")
-      console.log(CLI_BLUE + "OUTPUT (final): " + CLI_RESET)
+      console.log(CLI_BOLD + "OUTPUT (final): " + CLI_RESET)
       console.log("")
       console.log(CLI_GREEN + ` transaction id: ${tx.hash}`);
       console.log("")
-      console.log(CLI_RESET + "All flow completed!")
+      console.log(CLI_BLUE + "All flow completed!")
       console.log("")
 });
   
