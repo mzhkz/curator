@@ -34,7 +34,7 @@ program
   
 program
   .command("req [address] [nonce]") // command を使用する場合
-  .description("to request to update data to the server, and get a sig B nonce.")
+  .description("to request to upload data to the server, and get a sig B nonce.")
     .action(async (address, nonce) => {
       const hex_a_nonce = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(nonce));
       const hex_hashed_a_nonce = ethers.utils.keccak256(hex_a_nonce);
