@@ -38,6 +38,11 @@ node provider req [B_host] [A_nonce]
 
 # Note
 
+以下に、発表用論文とスライドのリンクを掲載します。
+
+Paper: https://portal.sfc.wide.ad.jp/meetings/2022s/wip/kumo_bcali/220714_moz_wip_paper.pdf
+Presentation: https://portal.sfc.wide.ad.jp//meetings/2022s/wip/kumo_bcali/220714_wip_moz_prentation.pdf
+
 # Author
 
 作成情報を列挙する
