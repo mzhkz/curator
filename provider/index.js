@@ -4,8 +4,8 @@ const fs = require("fs");
 const axios = require("axios");
 var FormData = require('form-data');
 
-const PERVArtifact = require("./dest/PERV.json");
-const PERVAddress  = require("./dest/PERV-address.json");
+const CuratorArtifact = require("./dest/Curator.json");
+const CuratorAddress  = require("./dest/Curator-address.json");
 
 const url = "http://localhost:8545";
 const provider = new ethers.providers.JsonRpcProvider(url);
@@ -15,8 +15,8 @@ const _wallet = new ethers.Wallet(
 );
 const wallet = _wallet.connect(provider);
 const contract = new ethers.Contract(
-	PERVAddress.address,
-	PERVArtifact.abi,
+	CuratorAddress.address,
+	CuratorArtifact.abi,
 	wallet
 );
 

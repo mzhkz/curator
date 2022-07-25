@@ -5,8 +5,8 @@ import path from "path";
 import fs from "fs";
 import os from "os";
 
-import PERVArtifact from "./dest/PERV.json";
-import PERVAddress from "./dest/PERV-address.json";
+import CuratorArtifact from "./dest/Curator.json";
+import CuratorAddress from "./dest/Curator-address.json";
 
 const app: express.Express = express();
 
@@ -22,8 +22,8 @@ const _wallet: ethers.Wallet = new ethers.Wallet(
 
 const wallet = _wallet.connect(provider);
 const contract = new ethers.Contract(
-	PERVAddress.address as string,
-	PERVArtifact.abi as any,
+	CuratorAddress.address as string,
+	CuratorArtifact.abi as any,
 	wallet
 );
 

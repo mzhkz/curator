@@ -3,10 +3,9 @@ pragma solidity ^0.8.9;
 
 // Import this file to use console.log
 import "hardhat/console.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-contract PERV {
-    using ECDSA for bytes32;
+contract Curator {
+    // using ECDSA for bytes32;
 
     mapping(bytes => bytes) private _A_pubkey; // hashed_A_nonce -> A_pubkey
     mapping(bytes => bytes) private _B_pubkey; // hashed_A_nonce -> B_pubkey
