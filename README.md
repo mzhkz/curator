@@ -137,4 +137,4 @@ node validator checkdata [dataurl]
 
 # License
 
-GNU General Public License (GPL)
+MIT License
