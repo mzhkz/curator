@@ -2,10 +2,10 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-describe("PERV", () => {
+describe("Curator", () => {
 	async function deployPERV() {
-		const PERV = await ethers.getContractFactory("PERV");
-		const perv = await PERV.deploy();
+		const Curator = await ethers.getContractFactory("Curator");
+		const perv = await Curator.deploy();
 
 		const [owner, A, B, C] = [
 			new ethers.Wallet(
@@ -33,28 +33,28 @@ describe("PERV", () => {
 			const { perv, owner } = await loadFixture(deployPERV);
 			expect(await perv.owner()).to.equal(owner.address);
 		});
-		it("Should equal between hash sets by local and contract", async () => {
-			const { perv, owner } = await loadFixture(deployPERV);
-			const message = "abc";
-			const contract_hash = await perv.hashdayo(
-				ethers.utils.hexlify(ethers.utils.toUtf8Bytes(message))
-			);
-			const local_hast = await ethers.utils.id(message);
-			expect(contract_hash).to.equal(local_hast);
-		});
+		// it("Should equal between hash sets by local and contract", async () => {
+		// 	const { perv, owner } = await loadFixture(deployPERV);
+		// 	const message = "abc";
+		// 	const contract_hash = await perv.hashdayo(
+		// 		ethers.utils.hexlify(ethers.utils.toUtf8Bytes(message))
+		// 	);
+		// 	const local_hast = await ethers.utils.id(message);
+		// 	expect(contract_hash).to.equal(local_hast);
+		// });
 
-		it("Should equal between hash sets by singner and recover address", async () => {
-			const { perv, A, signer_A } = await loadFixture(deployPERV);
-			const message = "abc";
-			const hash = await ethers.utils.id(message);
-			const messageHashBinary = ethers.utils.arrayify(hash);
-			const signature = await A.signMessage(messageHashBinary);
-			const signer = await perv
-				.connect(signer_A)
-				.signdayo(messageHashBinary, signature);
+		// it("Should equal between hash sets by singner and recover address", async () => {
+		// 	const { perv, A, signer_A } = await loadFixture(deployPERV);
+		// 	const message = "abc";
+		// 	const hash = await ethers.utils.id(message);
+		// 	const messageHashBinary = ethers.utils.arrayify(hash);
+		// 	const signature = await A.signMessage(messageHashBinary);
+		// 	const signer = await perv
+		// 		.connect(signer_A)
+		// 		.signdayo(messageHashBinary, signature);
 
-			expect(signer).to.equal(A.address);
-		});
+		// 	expect(signer).to.equal(A.address);
+		// });
 
 		it("Should equal between computed addresses by local and contract", async () => {
 			const { perv, B } = await loadFixture(deployPERV);

@@ -3,10 +3,9 @@ pragma solidity ^0.8.9;
 
 // Import this file to use console.log
 import "hardhat/console.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-contract PERV {
-    using ECDSA for bytes32;
+contract Curator {
+    // using ECDSA for bytes32;
 
     mapping(bytes => bytes) private _A_pubkey; // hashed_A_nonce -> A_pubkey
     mapping(bytes => bytes) private _B_pubkey; // hashed_A_nonce -> B_pubkey
@@ -39,24 +38,22 @@ contract PERV {
         return  _recoverSigner(hash, sig);
     }
 
-    // 以下、本実装
-
     function getSignatures(bytes memory dataurl) public view returns (bytes memory A_sig, bytes memory B_sig) {
         bytes memory hashed_A_nonce = _hashed_A_nonce_from_dataurl[dataurl];
         A_sig = _A_signed_dataurl[hashed_A_nonce];
         B_sig = _B_signed_dataurl[hashed_A_nonce];
 
-        require(keccak256(A_sig) != keccak256(bytes("0x")), "PERV (getSignatures): not found A_sig");
-        require(keccak256(B_sig) != keccak256(bytes("0x")), "PERV (getSignatures): not found B_sig");
+        require(keccak256(A_sig) != keccak256(bytes("0x")), "Curator (getSignatures): not found A_sig");
+        require(keccak256(B_sig) != keccak256(bytes("0x")), "Curator (getSignatures): not found B_sig");
     }
 
     function createQue(bytes memory hashed_A_nonce, bytes memory B_signed_hashed_A_nonce, bytes memory B_pubkey, bytes memory hashed_data) public {
-        require(_phase[hashed_A_nonce] == 0, "PERV (putIntent): the nonce has been expired");
+        require(_phase[hashed_A_nonce] == 0, "Curator (putIntent): the nonce has been expired");
         bytes32 expected_A_nonce = bytes32(hashed_A_nonce);
         address signer = _recoverSigner(expected_A_nonce, B_signed_hashed_A_nonce);
 
         address B_address = _calculateAddressFromPubKey(B_pubkey);
-        require(signer == B_address, "PERV (createQue): not match between the signer and the platformer");
+        require(signer == B_address, "Curator (createQue): not match between the signer and the platformer");
 
         _B_pubkey[hashed_A_nonce] = B_pubkey;
         _B_address[B_pubkey] = B_address;
@@ -65,8 +62,8 @@ contract PERV {
     }
 
     function putIntent(bytes memory dataurl, bytes memory hashed_dataurl, bytes memory B_signed_dataurl, bytes memory hashed_A_nonce) public {
-        require(_phase[hashed_A_nonce] == 1, "PERV (putIntent): the nonce has been expired");
-        require(bytes32(hashed_dataurl) == keccak256(dataurl), "PERV (putIntent): not match between the hashed_dataurl to dataurl");
+        require(_phase[hashed_A_nonce] == 1, "Curator (putIntent): the nonce has been expired");
+        require(bytes32(hashed_dataurl) == keccak256(dataurl), "Curator (putIntent): not match between the hashed_dataurl to dataurl");
 
         bytes32 expected_hash_dataurl = bytes32(hashed_dataurl);
         address signer = _recoverSigner(expected_hash_dataurl, B_signed_dataurl);
@@ -74,7 +71,7 @@ contract PERV {
         bytes memory B_pubkey = _B_pubkey[hashed_A_nonce];
         address B_address = _B_address[B_pubkey];
 
-        require(signer == B_address, "PERV (putIntent): not match between the signer and the platformer");
+        require(signer == B_address, "Curator (putIntent): not match between the signer and the platformer");
 
         bytes memory expected_hash = _hashed_data[hashed_A_nonce];
         uint256 hash_range = expected_hash.length;
@@ -83,7 +80,7 @@ contract PERV {
 
         bytes memory hash = slice(dataurl, start, hash_range);
 
-        require(keccak256(hash) == keccak256(expected_hash), "PERV (putIntent): not match the data hash");
+        require(keccak256(hash) == keccak256(expected_hash), "Curator (putIntent): not match the data hash");
 
         _B_signed_dataurl[hashed_A_nonce] = B_signed_dataurl;
         _dataurl[hashed_A_nonce] = dataurl;
@@ -104,7 +101,7 @@ contract PERV {
         address signer = _recoverSigner(expected_hash_dataurl, A_signed_dataurl);
         address A_address = _calculateAddressFromPubKey(A_pubkey);
 
-        require(signer == A_address, "PERV (putFinaility): not match between the signer and the provider");
+        require(signer == A_address, "Curator (putFinaility): not match between the signer and the provider");
 
         _A_pubkey[expected_hashed_A_nonce] = A_pubkey;
         _A_signed_dataurl[expected_hashed_A_nonce] = A_signed_dataurl;
@@ -140,7 +137,7 @@ contract PERV {
        pure
        returns (uint8, bytes32, bytes32)
     {
-       require(sig.length == 65);
+       require(sig.length == 65, "Curator (_splitSignature): size of signature must be 65");
        
        bytes32 r;
        bytes32 s;
@@ -165,8 +162,8 @@ contract PERV {
         pure
         returns (bytes memory)
     {
-        require(_length + 31 >= _length, "slice_overflow");
-        require(_bytes.length >= _start + _length, "slice_outOfBounds");
+        require(_length + 31 >= _length, "Curator (slice): slice_overflow");
+        require(_bytes.length >= _start + _length, "Curator (slice): slice_outOfBounds");
 
         bytes memory tempBytes;
 

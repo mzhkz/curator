@@ -5,11 +5,11 @@ import { Contract } from "ethers";
 
 async function main() {
 	const [deployer] = await ethers.getSigners();
-	const PERV = await ethers.getContractFactory("PERV");
-	const perv = await PERV.deploy();
-	await perv.deployed();
-	console.log(`MyNFT ERC721 was deployed to: ${perv.address}}`);
-	generateABIFile(perv, "PERV");
+	const Curator = await ethers.getContractFactory("Curator");
+	const curator = await Curator.deploy();
+	await curator.deployed();
+	console.log(`Curator Contract was deployed to: ${curator.address}}`);
+	generateABIFile(curator, "Curator");
 }
 
 function generateABIFile(
